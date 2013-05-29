@@ -1,19 +1,22 @@
 module TiltActionView
   class ActionViewHandler
 
+    # Return the rendered contents in which to run from the context of the ActionView::Template
     def self.call(template)
-      template_source = template.source
-      variable_names = controller.instance_variable_names
-      variable_names -= %w[@template]
-      if controller.respond_to?(:protected_instance_variables)
-        variable_names -= controller.protected_instance_variables
-      end
-      variable_names.reject! { |name| name.starts_with '@_' }
+      <<-source
+        variable_names = controller.instance_variable_names
+        variable_names -= %w[@template]
+        if controller.respond_to?(:protected_instance_variables)
+          variable_names -= controller.protected_instance_variables
+        end
+        variable_names.reject! { |name| name.starts_with '@_' }
 
-      variable_names.each do |name|
-        variables[name.sub(/^@/, '')] = controller.instance_variable_get(name)
-      end
-      @tilt_template_class.new(template.identifier).render(template_source, variables).html_safe
+        variables = {}
+        variable_names.each do |name|
+          variables[name] = controller.instance_variable_get(name)
+        end
+        #{@tilt_template_class.name}.new('#{template.identifier}').render(variables).html_safe
+      source
     end
 
     def self.handler_for(tilt_template)
