@@ -9,7 +9,7 @@ module TiltActionView
         if controller.respond_to?(:protected_instance_variables)
           variable_names -= controller.protected_instance_variables
         end
-        variable_names.reject! { |name| name.starts_with '@_' }
+        variable_names.reject! { |name| name.starts_with? '@_' }
 
         variables = {}
         variable_names.each do |name|
