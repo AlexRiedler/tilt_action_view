@@ -26,4 +26,26 @@ module TiltActionView
     end
   end
 
+  module HandlebarsTemplateHandler
+    def self.call(template)
+      <<-HBS
+      variable_names = controller.instance_variable_names
+      variable_names -= %w[@template]
+      if controller.respond_to?(:protected_instance_variables)
+        variable_names -= controller.protected_instance_variables
+      end
+      variable_names.reject! { |name| name.starts_with? '@_' }
+
+      variables = variable_names.inject({}) { |acc,name| acc[name.sub(/^@/, "")] = controller.instance_variable_get(name); acc }
+      variables.merge!(local_assigns)
+
+      TiltActionView::HandlebarsTemplateHandler.render_template(#{template.source.inspect}, variables).html_safe
+      HBS
+    end
+
+    def self.render_template(data, variables)
+      precompiled_template = HandlebarsAssets::Handlebars.precompile(data)
+      HandlebarsAssets::Handlebars.runtime_context.call("Handlebars.template(#{precompiled_template})(#{variables.to_json}")
+    end
+  end
 end

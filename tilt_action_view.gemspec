@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "actionpack"
   spec.add_dependency "tilt"
+  spec.add_dependency "execjs"
 end
