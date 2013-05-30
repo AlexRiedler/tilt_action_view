@@ -1,10 +1,9 @@
 require 'execjs'
 require 'tilt'
 require 'debugger'
+
 module TiltActionView
   class TiltExecJS < Tilt::Template
-
-    include Unindent
 
     def self.default_mime_type
       'text/html'
@@ -27,37 +26,6 @@ module TiltActionView
       handler.instance_variable_set :@postamble, postamble
       handler.instance_variable_set :@context, context
       handler
-    end
-  end
-
-  class TiltHandlebars < Tilt::Template
-
-    include Unindent
-
-    def self.default_mime_type
-      'application/javascript'
-    end
-
-    def evaluate(scope, locals, &block)
-      template_namespace = HandlebarsAssets::Config.template_namespace
-
-      compiled_hbs = HandlebarsAssets::Handlebars.precompile(data, HandlebarsAssets::Config.options)
-
-      if template_path.is_partial?
-        unindent <<-PARTIAL
-          (function() {
-            Handlebars.registerPartial(#{template_path.name}, Handlebars.template(#{compiled_hbs}));
-          }).call(this);
-          PARTIAL
-      else
-        unindent <<-TEMPLATE
-          (function() {
-            this.#{template_namespace} || (this.#{template_namespace} = {});
-            this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
-            return this.#{template_namespace}[#{template_path.name}];
-          }).call(this);
-        TEMPLATE
-      end
     end
   end
 
