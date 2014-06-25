@@ -15,7 +15,8 @@ module TiltActionView
         variable_names.each do |name|
           variables[name] = controller.instance_variable_get(name)
         end
-        #{@tilt_template_class.name}.new('#{template.identifier}').render(self, variables.merge(local_assigns)).html_safe
+        result = #{@tilt_template_class.name}.new('#{template.identifier}').render(self, variables.merge(local_assigns)).html_safe
+        result
       source
     end
 

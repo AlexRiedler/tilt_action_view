@@ -25,6 +25,17 @@ Since this does not register any extensions with ActionView Handler you need to 
 
 (more details to come)
 
+```
+# create a handlebars handler, from its tilt template
+module HBSHandler
+  context = ::ExecJS::compile(File.new("/Users/ariedler/devl/personal/handlebars_assets/vendor/assets/javascripts/handlebars.js").read)
+  # do this in a module since it NEEDS a name due to limitation of rails actionview pipeline
+  HandlebarsTemplateJS = ::TiltActionView::TiltExecJS.new_handler_for(::HandlebarsAssets::HandlebarsTemplate, context)
+end
+av_handler = ::TiltActionView::ActionViewHandler.handler_for(HBSHandler::HandlebarsTemplateJS)
+::ActionView::Template.register_template_handler(:hbs, av_handler)
+```
+
 ## Contributing
 
 1. Fork it

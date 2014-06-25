@@ -1,6 +1,6 @@
 require 'execjs'
 require 'tilt'
-require 'debugger'
+require 'json'
 
 module TiltActionView
   class TiltExecJS < Tilt::Template
@@ -9,21 +9,21 @@ module TiltActionView
       'text/html'
     end
 
-    def evaluate(scope, locals, &block)
-      preamble = self.class.instance_variable_get(:@preamble)
-      js_fn_code = self.class.instance_variable_get(:@tilt_template_class).new(file).render(scope, locals, &block)
-      postamble = self.class.instance_variable_get(:@postamble)
-      # TODO: this performance will not be good due to creating ExecJS engines...; need some sort of context
-      #       also the javascript libraries they needed are required to be put in preamble ... which is slow
-      self.class.instance_variable_get(:@context).eval("#{preamble}#{js_fn_code}#{postamble}(#{variables.to_json})")
+    def prepare
+      # pass
     end
 
-    def self.new_handler_for(tilt_template, context=ExecJS.compile(""), preamble="", postamble="")
+    def evaluate(scope, locals, &block)
+      context = self.class.instance_variable_get(:@context)
+      js_fn_code = self.class.instance_variable_get(:@tilt_template_class).new(file).render(scope, locals, &block)
+      js_eval_string = "(function() { return #{js_fn_code} }).call(this)(#{JSON.dump(locals)})"
+      context.eval(js_eval_string)
+    end
+
+    def self.new_handler_for(tilt_template, context=ExecJS.compile(""))
       # TODO: potentially the tilt_template will have access to the context...
       handler = Class.new(TiltExecJS)
-      handler.instance_variable_set :@preamble, preamble
       handler.instance_variable_set :@tilt_template_class, tilt_template
-      handler.instance_variable_set :@postamble, postamble
       handler.instance_variable_set :@context, context
       handler
     end
